@@ -1,0 +1,8 @@
+{
+  "appId": "com.kaddakaman.walker",
+  "appName": "Walker",
+  "webDir": "www",
+  "android": {
+    "useLegacyBridge": true
+  }
+}

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#16a34a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="description" content="Track your walks with GPS, keep a history and share routes with friends." />
+  <title>Walker</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="vendor/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="title">Walker</h1>
+    <span id="sync-badge" class="sync-badge" hidden></span>
+  </header>
+
+  <main>
+    <!-- WALK -->
+    <section id="view-walk" class="view active">
+      <div class="map-wrap">
+        <div id="map" class="map"></div>
+        <button id="btn-recenter" class="map-btn" title="Centre on me" aria-label="Centre on me">◎</button>
+      </div>
+
+      <div id="guide" class="guide" hidden>
+        <svg id="guide-arrow" class="guide-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L20 21 L12 16.5 L4 21 Z" fill="currentColor"/></svg>
+        <div class="guide-text">
+          <div id="guide-main" class="guide-main">Following route</div>
+          <div id="guide-sub" class="guide-sub"></div>
+        </div>
+        <button id="btn-stop-guide" class="icon-btn" aria-label="Stop following">✕</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span id="s-time" class="v">00:00</span><span class="l">Time</span></div>
+        <div class="stat"><span id="s-dist" class="v">0 m</span><span class="l">Distance</span></div>
+        <div class="stat"><span id="s-speed" class="v">0.0</span><span class="l">Avg km/h</span></div>
+        <div class="stat"><span id="s-steps" class="v">0</span><span class="l">Steps</span></div>
+      </div>
+
+      <p id="gps-status" class="gps-status">Waiting for GPS…</p>
+      <button id="btn-toggle" class="big-btn start">Start walk</button>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="view-history" class="view">
+      <div id="history-summary" class="summary"></div>
+      <ul id="history-list" class="list"></ul>
+      <p id="history-empty" class="empty">No walks yet. Press <b>Start walk</b> to record your first one.</p>
+    </section>
+
+    <!-- ROUTES -->
+    <section id="view-routes" class="view">
+      <div id="friend-routes-section">
+        <div class="section-head">
+          <h2>From friends</h2>
+          <button id="btn-refresh-routes" class="link-btn">Refresh</button>
+        </div>
+        <ul id="friend-routes-list" class="list"></ul>
+        <p id="friend-routes-empty" class="empty small"></p>
+      </div>
+
+      <div class="section-head"><h2>Saved routes</h2></div>
+      <ul id="routes-list" class="list"></ul>
+      <p id="routes-empty" class="empty small">Routes from share links and GPX files appear here.</p>
+      <div class="row-btns">
+        <button id="btn-add-link" class="btn secondary">Add from link</button>
+        <label class="btn secondary file-btn">
+          Import GPX
+          <input id="gpx-input" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" hidden />
+        </label>
+      </div>
+      <p class="hint">To share one of your walks, open it in <b>History</b> and tap <b>Share</b>.</p>
+    </section>
+
+    <!-- ME (account, friends, settings) -->
+    <section id="view-me" class="view">
+      <div id="cloud-off" class="card" hidden>
+        <h2>Accounts aren't switched on yet</h2>
+        <p class="muted">Walks are saved on this phone only. To turn on accounts, backup and friends, follow
+          “Set up accounts” in the project README.</p>
+      </div>
+
+      <form id="auth-form" class="card" hidden novalidate>
+        <div class="segmented">
+          <button type="button" data-mode="signin" class="active">Sign in</button>
+          <button type="button" data-mode="signup">Create account</button>
+        </div>
+        <p class="muted small">Back up your walks and share routes with friends.</p>
+        <label>Email<input id="auth-email" type="email" autocomplete="email" required /></label>
+        <label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" required /></label>
+        <label id="auth-username-row" hidden>Username
+          <input id="auth-username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. sam_walks" />
+        </label>
+        <p id="auth-error" class="error" hidden></p>
+        <button id="auth-submit" type="submit" class="btn primary">Sign in</button>
+      </form>
+
+      <div id="account" hidden>
+        <div class="card account-card">
+          <div class="avatar" id="me-avatar">?</div>
+          <div class="info">
+            <div class="name" id="me-username">@you</div>
+            <div class="muted small" id="me-email"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <h2>Backup</h2>
+            <button id="btn-sync" class="link-btn">Sync now</button>
+          </div>
+          <p id="sync-status" class="muted small">Not synced yet</p>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <h2>Friends</h2>
+            <button id="btn-refresh-friends" class="link-btn">Refresh</button>
+          </div>
+          <form id="add-friend-form" class="inline-form">
+            <input id="friend-username" type="text" placeholder="Add by username" autocapitalize="none" spellcheck="false" />
+            <button class="btn primary" type="submit">Add</button>
+          </form>
+          <ul id="friend-requests" class="people"></ul>
+          <ul id="friend-list" class="people"></ul>
+          <p id="friends-empty" class="muted small">No friends yet. Ask a friend for their Walker username.</p>
+        </div>
+
+        <button id="btn-signout" class="btn danger wide">Sign out</button>
+      </div>
+
+      <div class="card">
+        <h2>Settings</h2>
+        <label class="setting">Stride length (cm)
+          <input id="set-stride" type="number" inputmode="numeric" min="30" max="150" step="1" />
+        </label>
+        <p class="muted small">Only used to estimate steps if your phone has no step sensor.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- DETAIL (walk or route) -->
+  <section id="detail" class="detail" hidden>
+    <header class="topbar">
+      <button id="btn-detail-back" class="icon-btn" aria-label="Back">‹</button>
+      <h1 id="detail-title">Walk</h1>
+      <button id="btn-rename" class="icon-btn" aria-label="Rename">✎</button>
+    </header>
+    <div class="detail-body">
+      <p id="detail-date" class="muted"></p>
+      <div id="detail-map" class="map detail-map"></div>
+      <div id="detail-stats" class="stats"></div>
+      <p id="detail-shared" class="shared-note" hidden></p>
+      <div class="actions">
+        <button id="btn-follow" class="btn primary">Follow this route</button>
+        <button id="btn-share" class="btn secondary">Share</button>
+        <button id="btn-save-route" class="btn secondary" hidden>Save to my routes</button>
+        <button id="btn-gpx" class="btn secondary">Export GPX</button>
+        <button id="btn-unshare" class="btn secondary" hidden>Stop sharing</button>
+        <button id="btn-delete" class="btn danger">Delete</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabs">
+    <button data-view="walk" class="tab active"><span>🚶</span>Walk</button>
+    <button data-view="history" class="tab"><span>🕑</span>History</button>
+    <button data-view="routes" class="tab"><span>🗺️</span>Routes<i id="routes-dot" class="dot" hidden></i></button>
+    <button data-view="me" class="tab"><span>👤</span>Me<i id="me-dot" class="dot" hidden></i></button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="dialog">
+    <form method="dialog">
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-text"></p>
+      <input id="dialog-input" type="text" hidden />
+      <menu id="dialog-buttons"></menu>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

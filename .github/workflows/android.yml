@@ -1,0 +1,96 @@
+# Builds the Walker Android app on every push and publishes it as a
+# downloadable APK on the "Latest Android build" release page.
+name: Android app
+
+on:
+  push:
+    branches: [main, master, 'claude/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build web app
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          WALKER_WEB_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: Copy into Android project
+        run: npx cap sync android
+
+      - name: Signing key
+        id: key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.WALKER_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/walker.keystore"
+            echo "file=$RUNNER_TEMP/walker.keystore" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::WALKER_KEYSTORE_BASE64 secret not set. The APK is signed with a throwaway key, so it can't be installed over a previous build (uninstall first). See README."
+          fi
+
+      - name: Build APK
+        working-directory: android
+        env:
+          WALKER_KEYSTORE_FILE: ${{ steps.key.outputs.file }}
+          WALKER_KEYSTORE_PASSWORD: ${{ secrets.WALKER_KEYSTORE_PASSWORD }}
+          WALKER_VERSION_CODE: ${{ github.run_number }}
+          WALKER_VERSION_NAME: 2.0.${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          if [ -n "$WALKER_KEYSTORE_FILE" ]; then
+            ./gradlew assembleRelease --no-daemon
+            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/Walker.apk"
+          else
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/Walker.apk"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Walker-apk
+          path: ${{ runner.temp }}/Walker.apk
+
+      - name: Publish to the "android-latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCOUNTS: ${{ vars.SUPABASE_URL != '' && 'on' || 'off (Supabase not configured yet)' }}
+        run: |
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest "$RUNNER_TEMP/Walker.apk" \
+            --target "$GITHUB_SHA" \
+            --title "Latest Android build (#${{ github.run_number }})" \
+            --prerelease \
+            --notes "Open this page on your Android phone and tap **Walker.apk** to install.
+
+          Build #${{ github.run_number }} from \`${GITHUB_REF_NAME}\` (${GITHUB_SHA::7}). Accounts: ${ACCOUNTS}."

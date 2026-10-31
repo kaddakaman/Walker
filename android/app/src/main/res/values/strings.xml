@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Walker</string>
+    <string name="title_activity_main">Walker</string>
+    <string name="package_name">com.kaddakaman.walker</string>
+    <string name="custom_url_scheme">com.kaddakaman.walker</string>
+    <!-- Background GPS notification (capacitor-community/background-geolocation) -->
+    <string name="capacitor_background_geolocation_notification_channel_name">Walk tracking</string>
+    <string name="capacitor_background_geolocation_notification_icon">drawable/ic_stat_walker</string>
+    <string name="capacitor_background_geolocation_notification_color">#16A34A</string>
+</resources>

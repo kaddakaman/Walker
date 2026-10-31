@@ -336,3 +336,73 @@ dialog menu { display: flex; justify-content: flex-end; gap: 8px; margin: 0; pad
 @media (max-width: 360px) {
   .stat .v { font-size: 1rem; }
 }
+
+/* ---------- v2: account, friends, sections ---------- */
+.sync-badge { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.card h2, .section-head h2 { font-size: 1rem; margin: 0 0 8px; }
+.card label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
+.card input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 11px 12px;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+.card .btn.primary { width: 100%; }
+.small { font-size: 0.82rem; }
+.error { color: var(--red); font-size: 0.9rem; margin: 0 0 10px; }
+.wide { width: 100%; margin-bottom: 12px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 8px; }
+.section-head h2 { margin: 0; }
+.link-btn { background: none; border: none; color: var(--green); font-weight: 600; font-size: 0.9rem; cursor: pointer; padding: 4px; }
+.link-btn:disabled { opacity: 0.5; }
+#view-routes .list { margin-bottom: 10px; }
+.empty.small { font-size: 0.85rem; margin: 6px 0 16px; }
+.row-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.row-btns .file-btn { margin: 0; }
+
+.segmented { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: 10px; padding: 3px; margin-bottom: 10px; }
+.segmented button { border: none; background: none; padding: 9px; border-radius: 8px; font-weight: 600; color: var(--muted); cursor: pointer; font-size: 0.95rem; }
+.segmented button.active { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / 0.15); }
+
+.account-card { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--green); color: #fff; font-weight: 700; font-size: 1.3rem;
+  display: flex; align-items: center; justify-content: center; text-transform: uppercase;
+}
+.account-card .name { font-weight: 700; font-size: 1.1rem; }
+
+.inline-form { display: flex; gap: 8px; margin-bottom: 8px; }
+.inline-form input { margin: 0; flex: 1; }
+.inline-form .btn.primary { width: auto; }
+.people { list-style: none; margin: 0; padding: 0; }
+.people li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border); }
+.people li:first-child { border-top: none; }
+.people .who { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.people .tag { font-size: 0.75rem; color: var(--muted); font-weight: 400; display: block; }
+.people .btn, .card .people .btn.primary { width: auto; flex: none; padding: 6px 12px; font-size: 0.85rem; }
+
+.setting input { max-width: 120px; }
+
+.dot { position: absolute; top: 8px; margin-left: 22px; width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+.dot[hidden] { display: none; }
+.tab { position: relative; }
+
+.shared-note { font-size: 0.85rem; color: var(--green-dark); margin: 10px 0 0; }
+.actions [hidden] { display: none; }
+
+dialog menu { flex-wrap: wrap; }
+dialog menu.stacked { flex-direction: column; align-items: stretch; }
+.btn.plain { background: none; color: var(--muted); }

@@ -14,8 +14,8 @@ import {
   formatDistance,
   formatDuration,
   avgSpeedKmh,
-} from '../js/geo.js';
-import { buildShareLink, parseShareHash } from '../js/share.js';
+} from '../src/js/geo.js';
+import { buildShareLink, parseShareHash } from '../src/js/share.js';
 
 const near = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, `${msg ?? ''} expected ${b}±${tol}, got ${a}`);
 

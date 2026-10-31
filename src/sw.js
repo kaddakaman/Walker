@@ -1,14 +1,11 @@
 // Service worker: caches the app so it opens instantly (and offline), and
 // keeps recently viewed map tiles for patchy signal on walks.
-const APP_CACHE = 'walker-app-v1';
+const APP_CACHE = 'walker-app-v2';
 const TILE_CACHE = 'walker-tiles-v1';
 const MAX_TILES = 600;
 const APP_FILES = [
-  './', 'index.html', 'styles.css', 'manifest.webmanifest',
-  'js/app.js', 'js/geo.js', 'js/tracker.js', 'js/steps.js', 'js/storage.js', 'js/share.js',
+  './', 'index.html', 'styles.css', 'manifest.webmanifest', 'js/app.js', 'vendor/leaflet.css',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
 ];
 
 self.addEventListener('install', (e) => {
@@ -51,11 +48,14 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // Only this site's own files are cached; everything else (e.g. accounts) goes straight to the network.
+  if (url.origin !== location.origin) return;
+
   // App files: network first so updates arrive, fall back to cache offline.
   e.respondWith(
     fetch(req)
       .then((res) => {
-        if (res.ok && (url.origin === location.origin || url.hostname === 'unpkg.com')) {
+        if (res.ok) {
           const copy = res.clone();
           caches.open(APP_CACHE).then((c) => c.put(req, copy));
         }
